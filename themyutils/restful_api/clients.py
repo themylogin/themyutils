@@ -19,6 +19,8 @@ class RestfulApiPoller(object):
 
             try:
                 data = json.loads(urllib2.urlopen(urllib2.Request(self.url, None, headers)).read())
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except:
                 logger.exception("Error loading %s" % self.url)
                 time.sleep(self.reconnect_timeout)

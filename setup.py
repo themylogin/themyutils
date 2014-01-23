@@ -1,26 +1,22 @@
-import os
+from setuptools import find_packages, setup
 
-from setuptools import setup, find_packages
-
-here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, "README.md")).read()
-
-requires = []
-
-setup(name="themyutils",
-      version="0.0",
-      description="",
-      long_description=README,
-      classifiers=[
-        "Programming Language :: Python",
-        ],
-      author="themylogin",
-      author_email="",
-      url="https://github.com/themylogin/themyutils",
-      keywords="",
-      packages=find_packages(),
-      include_package_data=True,
-      zip_safe=False,
-      test_suite="themyutils",
-      install_requires=requires,
-      )
+setup(
+    name="themyutils",
+    version="0.0.0",
+    author="themylogin",
+    author_email="themylogin@gmail.com",
+    packages=find_packages(exclude=["tests"]),
+    scripts=[],
+    test_suite="nose.collector",
+    url="http://github.com/themylogin/themyutils",
+    description="Common python utils used in themylogin's software",
+    long_description=open("README.md").read(),
+    install_requires=[
+        "Flask",
+        "pytils",
+        "redis",
+    ],
+    setup_requires=[
+        "nose>=1.0",
+    ],
+)
