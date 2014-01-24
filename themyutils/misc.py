@@ -1,8 +1,12 @@
+# -*- coding=utf-8 -*-
+from __future__ import absolute_import, division, unicode_literals
+
 import logging
 import math
 import time
 
 logger = logging.getLogger(__name__)
+
 
 def retry(operation, max_tries=100, max_sleep=50, exceptions=(Exception,), logger=logger):
     tries = 0
