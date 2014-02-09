@@ -7,6 +7,7 @@ from redis import Redis
 from uuid import uuid4
 from werkzeug.datastructures import CallbackDict
 
+
 class RedisSession(CallbackDict, SessionMixin):
     def __init__(self, initial=None, sid=None, new=False):
         def on_update(self):
@@ -15,6 +16,7 @@ class RedisSession(CallbackDict, SessionMixin):
         self.sid = sid
         self.new = new
         self.modified = False
+
 
 class RedisSessionInterface(SessionInterface):
     serializer = pickle
