@@ -42,8 +42,8 @@ hooks = [DateTimeHook, TimeDeltaHook]
 
 
 class JSONDecoder(json.JSONDecoder):
-    def decode(self, s):
-        o = super(JSONDecoder, self).decode(s)
+    def decode(self, *args, **kwargs):
+        o = super(JSONDecoder, self).decode(*args, **kwargs)
         o = self.traverse(o)
         return o
 
@@ -85,9 +85,9 @@ class JSONEncoder(json.JSONEncoder):
             return repr(o)
 
 
-def dumps(o):
-    return JSONEncoder().encode(o)
+def dumps(o, *args, **kwargs):
+    return JSONEncoder(*args, **kwargs).encode(o)
 
 
-def loads(s):
-    return JSONDecoder().decode(s)
+def loads(s, *args, **kwargs):
+    return JSONDecoder(*args, **kwargs).decode(s)
