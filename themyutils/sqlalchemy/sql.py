@@ -5,6 +5,8 @@ from datetime import datetime, date
 import json
 from sqlalchemy.orm.query import Query
 
+__all__ = [b"literal_query"]
+
 
 def literal_query(statement, bind=None):
     """

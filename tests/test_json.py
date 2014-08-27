@@ -7,6 +7,7 @@ import unittest
 
 import json
 import themyutils.json
+from themyutils.json.hooks import hooks
 
 
 class LoadsTestCase(unittest.TestCase):
@@ -66,8 +67,9 @@ class HooksTestCase(unittest.TestCase):
             (timedelta(seconds=10), 'timedelta(PT10S)')
         ]
 
-        for o, s in tests:
-            o = [o]
-            s = json.dumps([s])
-            self.assertEqual(themyutils.json.dumps(o), s)
-            self.assertEqual(themyutils.json.loads(s), o)
+        with patch.object(themyutils.json, "hooks", hooks):
+            for o, s in tests:
+                o = [o]
+                s = json.dumps([s])
+                self.assertEqual(themyutils.json.dumps(o), s)
+                self.assertEqual(themyutils.json.loads(s), o)
