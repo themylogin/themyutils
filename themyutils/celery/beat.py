@@ -3,21 +3,24 @@ from __future__ import absolute_import, division, unicode_literals
 
 from celery.schedules import crontab
 
-
-__all__ = [b"cron_jobs", b"cron_job"]
-
-cron_jobs = {}
+__all__ = ["Cron"]
 
 
-def cron_job(celery, *crontab_args, **crontab_kwargs):
-    def decorator(func):
-        celery_task = celery.task(func)
+class Cron(object):
+    def __init__(self, celery):
+        self.celery = celery
 
-        celery.conf.CELERYBEAT_SCHEDULE[celery_task.name] = {
-            "task":     celery_task.name,
-            "schedule": crontab(*crontab_args, **crontab_kwargs),
-        }
+        self.jobs = {}
 
-        cron_jobs[celery_task.name] = func
+    def job(self, *args, **kwargs):
+        def decorator(func):
+            celery_task = self.celery.task(func)
 
-    return decorator
+            self.celery.conf.CELERYBEAT_SCHEDULE[celery_task.name] = {
+                "task":     celery_task.name,
+                "schedule": crontab(*args, **kwargs),
+            }
+
+            self.jobs[celery_task.name] = func
+
+        return decorator
