@@ -16,6 +16,7 @@ setup(
         "isodate",
         "pytils",
         "redis",
+        "simplejson>=2.2.0",
     ],
     setup_requires=[
         "nose>=1.0",

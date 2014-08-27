@@ -1,48 +1,49 @@
 # -*- coding=utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals
 
+from collections import namedtuple
 from datetime import datetime, timedelta
 from mock import Mock, patch
+import simplejson
 import unittest
 
-import json
 import themyutils.json
 from themyutils.json.hooks import hooks
 
 
 class LoadsTestCase(unittest.TestCase):
-    def test_unicode_hook_called(self):
-        unicode_hook = Mock()
-        with patch.object(themyutils.json.JSONDecoder, "unicode_hook", unicode_hook):
+    def test_basestring_hook_called(self):
+        basestring_hook = Mock()
+        with patch.object(themyutils.json.JSONDecoder, "basestring_hook", basestring_hook):
             themyutils.json.loads('{"data": {"datetime": "2014-02-02T17:32:01", "datetimes": [{"asdict": '+\
                                    '"2014-02-02T17:32:02"}, "2014-02-02T17:32:03"]}}')
-            unicode_hook.assert_any_call("2014-02-02T17:32:01")
-            unicode_hook.assert_any_call("2014-02-02T17:32:02")
-            unicode_hook.assert_any_call("2014-02-02T17:32:03")
+            basestring_hook.assert_any_call("2014-02-02T17:32:01")
+            basestring_hook.assert_any_call("2014-02-02T17:32:02")
+            basestring_hook.assert_any_call("2014-02-02T17:32:03")
 
-    def test_unicode_hook_works(self):
+    def test_basestring_hook_works(self):
         hook = Mock()
         hook.class_name = "hook"
         hook.decode = Mock(return_value=42)
         with patch.object(themyutils.json, "hooks", [hook]):
-            self.assertEqual(themyutils.json.JSONDecoder.unicode_hook("hook(value)"), 42)
+            self.assertEqual(themyutils.json.JSONDecoder.basestring_hook("hook(value)"), 42)
             hook.decode.assert_called_once_with("value")
 
-    def test_unicode_hook_handles_ValueError(self):
+    def test_basestring_hook_handles_ValueError(self):
         hook = Mock()
         hook.class_name = "hook"
         hook.decode = Mock(side_effect=ValueError)
         with patch.object(themyutils.json, "hooks", [hook]):
-            self.assertEqual(themyutils.json.JSONDecoder.unicode_hook("hook(value)"), "hook(value)")
+            self.assertEqual(themyutils.json.JSONDecoder.basestring_hook("hook(value)"), "hook(value)")
 
-    def test_unicode_hook_distinguishes_classes(self):
+    def test_basestring_hook_distinguishes_classes(self):
         hook1 = Mock()
         hook2 = Mock()
         hook1.class_name = "hook1"
         hook2.class_name = "hook2"
         with patch.object(themyutils.json, "hooks", [hook1, hook2]):
-            themyutils.json.JSONDecoder.unicode_hook("hook1(value1)")
-            themyutils.json.JSONDecoder.unicode_hook("hook2(value2)")
+            themyutils.json.JSONDecoder.basestring_hook("hook1(value1)")
+            themyutils.json.JSONDecoder.basestring_hook("hook2(value2)")
             hook1.decode.assert_called_once_with("value1")
             hook2.decode.assert_called_once_with("value2")
 
@@ -70,6 +71,10 @@ class HooksTestCase(unittest.TestCase):
         with patch.object(themyutils.json, "hooks", hooks):
             for o, s in tests:
                 o = [o]
-                s = json.dumps([s])
+                s = simplejson.dumps([s])
                 self.assertEqual(themyutils.json.dumps(o), s)
                 self.assertEqual(themyutils.json.loads(s), o)
+
+    def test_namedtuple(self):
+        self.assertEqual(themyutils.json.dumps(namedtuple("struct", ["a", "b"])(1, "2")),
+                         simplejson.dumps({"a": 1, "b": "2"}))

@@ -2,12 +2,12 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import re
-import json
+import simplejson
 
 from themyutils.json.hooks import hooks
 
 
-class JSONDecoder(json.JSONDecoder):
+class JSONDecoder(simplejson.JSONDecoder):
     def decode(self, *args, **kwargs):
         o = super(JSONDecoder, self).decode(*args, **kwargs)
         o = self.traverse(o)
@@ -20,13 +20,13 @@ class JSONDecoder(json.JSONDecoder):
         if isinstance(o, list):
             return map(self.traverse, o)
 
-        if isinstance(o, unicode):
-            return self.unicode_hook(o)
+        if isinstance(o, basestring):
+            return self.basestring_hook(o)
 
         return o
 
     @staticmethod
-    def unicode_hook(s):
+    def basestring_hook(s):
         m = re.match("(?P<class_name>%s)\((?P<s>.*)\)$" % "|".join([re.escape(hook.class_name) for hook in hooks]), s)
         if m:
             for hook in hooks:
@@ -39,7 +39,7 @@ class JSONDecoder(json.JSONDecoder):
         return s
 
 
-class JSONEncoder(json.JSONEncoder):
+class JSONEncoder(simplejson.JSONEncoder):
     def default(self, o):
         for hook in hooks:
             if isinstance(o, hook.hook_for):
