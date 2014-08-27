@@ -6,28 +6,26 @@ import isodate
 import isodate.isoduration
 import isodate.isoerror
 
+from themyutils.json.hooks.base import EncodeDecodeHook
 
-class DateTimeHook(object):
+
+class DateTimeHook(EncodeDecodeHook):
     hook_for = datetime.datetime
     class_name = "datetime"
 
-    @staticmethod
-    def encode(o):
+    def encode(self, o):
         return o.isoformat()
 
-    @staticmethod
-    def decode(s):
+    def decode(self, s):
         return isodate.parse_datetime(s)
 
 
-class TimeDeltaHook(object):
+class TimeDeltaHook(EncodeDecodeHook):
     hook_for = datetime.timedelta
     class_name = "timedelta"
 
-    @staticmethod
-    def encode(o):
+    def encode(self, o):
         return isodate.isoduration.duration_isoformat(o)
 
-    @staticmethod
-    def decode(s):
+    def decode(self, s):
         return isodate.isoduration.parse_duration(s)

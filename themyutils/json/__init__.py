@@ -5,6 +5,7 @@ import re
 import json
 
 from themyutils.json.hooks import hooks
+from themyutils.json.hooks.base import EncodeHook, EncodeDecodeHook
 
 
 class JSONDecoder(json.JSONDecoder):
@@ -27,14 +28,17 @@ class JSONDecoder(json.JSONDecoder):
 
     @staticmethod
     def unicode_hook(s):
-        m = re.match("(?P<class_name>%s)\((?P<s>.*)\)$" % "|".join([re.escape(hook.class_name) for hook in hooks]), s)
+        m = re.match("(?P<class_name>%s)\((?P<s>.*)\)$" % "|".join([re.escape(hook.class_name)
+                                                                    for hook in hooks
+                                                                    if isinstance(hook, EncodeDecodeHook)]), s)
         if m:
             for hook in hooks:
-                if hook.class_name == m.group("class_name"):
-                    try:
-                        return hook.decode(m.group("s"))
-                    except ValueError:
-                        pass
+                if isinstance(hook, EncodeDecodeHook):
+                    if hook.class_name == m.group("class_name"):
+                        try:
+                            return hook.decode(m.group("s"))
+                        except ValueError:
+                            pass
 
         return s
 
@@ -42,8 +46,13 @@ class JSONDecoder(json.JSONDecoder):
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         for hook in hooks:
-            if isinstance(o, hook.hook_for):
-                return '%s(%s)' % (hook.class_name, hook.encode(o))
+            if isinstance(hook, EncodeHook):
+                print o
+                if hook.can_encode(o):
+                    if isinstance(hook, EncodeDecodeHook):
+                        return "%s(%s)" % (hook.class_name, hook.encode(o))
+                    else:
+                        return hook.encode(o)
 
         try:
             return super(JSONEncoder, self).default(o)
