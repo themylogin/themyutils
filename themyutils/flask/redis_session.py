@@ -1,3 +1,6 @@
+# -*- coding=utf-8 -*-
+from __future__ import absolute_import, division, unicode_literals
+
 # http://flask.pocoo.org/snippets/75/
 
 from datetime import timedelta

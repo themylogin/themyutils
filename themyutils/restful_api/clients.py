@@ -1,9 +1,13 @@
+# -*- coding=utf-8 -*-
+from __future__ import absolute_import, division, unicode_literals
+
 import json
 import logging
 import time
 import urllib2
 
 logger = logging.getLogger(__name__)
+
 
 class RestfulApiPoller(object):
     def __init__(self, url, reconnect_timeout=5):
