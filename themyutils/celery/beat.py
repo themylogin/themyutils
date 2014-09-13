@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 from celery.schedules import crontab
 
-__all__ = ["Cron"]
+__all__ = [b"Cron"]
 
 
 class Cron(object):
