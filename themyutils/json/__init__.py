@@ -41,6 +41,9 @@ class JSONDecoder(simplejson.JSONDecoder):
 
 class JSONEncoder(simplejson.JSONEncoder):
     def default(self, o):
+        if isinstance(o, set):
+            return list(o)
+
         for hook in hooks:
             if isinstance(o, hook.hook_for):
                 return '%s(%s)' % (hook.class_name, hook.encode(o))
