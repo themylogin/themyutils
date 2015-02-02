@@ -26,13 +26,12 @@ def image_handler(handler):
         path = os.path.join(self.path, filename)
 
         if self.allow_internet:
-            if not os.path.exists(path) and "/" in filename:
-                [proto, etc] = filename.split("/", 1)
-                url = proto + "://" + etc + "?" + request.query_string
+            if not os.path.exists(path) and b"/" in filename:
+                [proto, etc] = filename.split(b"/", 1)
+                url = proto + b"://" + etc + b"?" + request.query_string
 
                 try:
-                    r = requests.get(url.encode("utf-8"), headers={INTERNET_IMAGE_HEADER: "true"},
-                                     stream=True)
+                    r = requests.get(url, headers={INTERNET_IMAGE_HEADER: "true"}, stream=True)
                     if not os.path.isdir(os.path.dirname(path)):
                         os.makedirs(os.path.dirname(path))
                     with open(path, "w") as f:
@@ -93,7 +92,7 @@ def image_handler(handler):
 class ImageServer(object):
     def __init__(self, app, path, url_path=None, allow_internet=False):
         self.app = app
-        self.path = path
+        self.path = path.encode("utf-8")
 
         if url_path is None:
             if self.path.startswith(app.static_folder):
