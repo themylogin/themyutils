@@ -111,7 +111,7 @@ class ImageServer(object):
             Rule("/<int(max=1920):width>/<int(max=1920):height>/<path:filename>",               endpoint="fit_image_%s" % path),
             Rule("/fit/<int(max=1920):width>/<int(max=1920):height>/<path:filename>",           endpoint="fit_image_%s" % path),
 
-            Rule("/min-size/<int(max=1920):size>/<filename>",                                   endpoint="min_size_image_%s" % path),
+            Rule("/min-size/<int(max=1920):size>/<path:filename>",                              endpoint="min_size_image_%s" % path),
 
             Rule("/crop/<int(max=1920):width>/<int(max=1920):height>/<path:filename>",          endpoint="crop_image_%s" % path),
             Rule("/crop/<any(   'top-left',  'top',      'top-right', "
