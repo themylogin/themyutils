@@ -4,6 +4,36 @@ from __future__ import absolute_import, division, unicode_literals
 import collections
 
 
+class KeyTransformDict(collections.Mapping):
+    def __init__(self, transform):
+        self.transform = transform
+        self._d = {}
+        self._s = {}
+
+    def __contains__(self, k):
+        return self.transform(k) in self._s
+
+    def __len__(self):
+        return len(self._s)
+
+    def __iter__(self):
+        return iter(self._s)
+
+    def __getitem__(self, k):
+        return self._d[self._s[self.transform(k)]]
+
+    def __setitem__(self, k, v):
+        self._d[k] = v
+        self._s[self.transform(k)] = k
+
+    def pop(self, k):
+        k0 = self._s.pop(self.transform(k))
+        return self._d.pop(k0)
+
+    def actual_key(self, k):
+        return self._s.get(self.transform(k))
+
+
 class OrderedDefaultDict(collections.OrderedDict):
     def __init__(self, *args, **kwargs):
         if not args:
