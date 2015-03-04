@@ -5,7 +5,7 @@ import ctypes
 import inspect
 import threading
 
-__all__ = [b"TerminateableThread"]
+__all__ = [b"TerminateableThread", b"start_daemon_thread"]
 
 
 def _async_raise(tid, exctype):
@@ -48,3 +48,10 @@ class TerminateableThread(threading.Thread):
         # Raises SystemExit in the context of the given thread, which should
         # cause the thread to exit silently (unless caught)
         self.raise_exc(SystemExit)
+
+
+def start_daemon_thread(target, *args, **kwargs):
+    thread = threading.Thread(target=target, args=args, kwargs=kwargs)
+    thread.daemon = True
+    thread.start()
+    return thread
