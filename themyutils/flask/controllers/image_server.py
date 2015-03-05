@@ -23,7 +23,8 @@ def image_handler(handler):
             raise BadRequest()
 
         filename = kwargs["filename"].encode("utf-8")
-        path = os.path.join(self.path, filename)
+        filename_append = (b"?" + request.query_string if request.query_string else b"")
+        path = os.path.join(self.path, filename + filename_append)
 
         if self.allow_internet:
             if not os.path.exists(path) and b"/" in filename:
@@ -43,7 +44,7 @@ def image_handler(handler):
         if not os.path.exists(path):
             raise NotFound()
 
-        processed_path = os.path.join(self.path, request.path[len(self.url_path) + 1:].encode("utf-8"))
+        processed_path = os.path.join(self.path, request.path[len(self.url_path) + 1:].encode("utf-8") + filename_append)
         if not os.path.exists(processed_path):
             im = Image.open(path)
             if hasattr(im, "_getexif"):
