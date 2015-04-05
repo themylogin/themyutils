@@ -32,7 +32,9 @@ def literal_query(statement, bind=None):
             return self.render_literal_value(bindparam.value, bindparam.type)
 
         def render_literal_value(self, value, type_):
-            if isinstance(value, bool):
+            if value is None:
+                return "NULL"
+            elif isinstance(value, bool):
                 return str(int(value))
             elif isinstance(value, long):
                 return str(value)
