@@ -50,7 +50,11 @@ def image_handler(handler):
         if not os.path.exists(processed_path):
             im = Image.open(path)
             if hasattr(im, "_getexif"):
-                exif = im._getexif()
+                try:
+                    exif = im._getexif()
+                except:
+                    exif = None
+
                 if exif:
                     metadata = {TAGS.get(k): v for k, v in exif.iteritems()}
                     if "Orientation" in metadata:
