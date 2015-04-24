@@ -1,7 +1,9 @@
 # -*- coding=utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals
 
-__all__ = [b"russian_strftime"]
+import pytz.reference
+
+__all__ = [b"russian_strftime", b"utc_to_local"]
 
 
 def russian_month(date_string):
@@ -21,3 +23,7 @@ def russian_month(date_string):
 
 def russian_strftime(datetime_object, format):
     return russian_month(datetime_object.strftime(format))
+
+
+def utc_to_local(datetime_object):
+    return datetime_object + pytz.reference.LocalTimezone().utcoffset(datetime_object)

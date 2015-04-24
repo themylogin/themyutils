@@ -15,6 +15,7 @@ setup(
         "Flask",
         "isodate",
         "pytils",
+        "pytz",
         "redis",
         "simplejson>=2.2.0",
     ],
