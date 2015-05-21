@@ -26,4 +26,4 @@ def russian_strftime(datetime_object, format):
 
 
 def utc_to_local(datetime_object):
-    return datetime_object + pytz.reference.LocalTimezone().utcoffset(datetime_object)
+    return (datetime_object + pytz.reference.LocalTimezone().utcoffset(datetime_object)).replace(tzinfo=None)
