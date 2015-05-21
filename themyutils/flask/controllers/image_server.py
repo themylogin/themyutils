@@ -95,6 +95,9 @@ def image_handler(handler):
                 os.makedirs(os.path.dirname(processed_path))
             im_processed.save(processed_path, format=im.format, quality=85)
 
+        if not os.path.isfile(processed_path):
+            raise NotFound()
+
         return BaseResponse(wrap_file(request.environ, open(processed_path, "r")),
                             mimetype=guess_type(processed_path)[0])
 
