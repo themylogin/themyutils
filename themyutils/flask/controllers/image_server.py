@@ -42,8 +42,6 @@ def image_handler(handler):
                         for chunk in r.iter_content(1024):
                             f.write(chunk)
                 except:
-                    import sys
-                    print sys.exc_info()
                     if os.path.exists(path):
                         os.unlink(path)
                     raise NotFound()
