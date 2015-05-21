@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
 from flask import request
+import hashlib
 from mimetypes import guess_type
 import os
 from PIL import Image
@@ -24,6 +25,8 @@ def image_handler(handler):
 
         filename = kwargs["filename"].encode("utf-8")
         filename_append = (b"?" + request.query_string if request.query_string else b"")
+        if len(filename + filename_append) > 255:
+            filename_append = b"$%s" % hashlib.sha256(filename_append).hexdigest()
         path = os.path.join(self.path, filename + filename_append)
 
         if self.allow_internet:
@@ -39,6 +42,8 @@ def image_handler(handler):
                         for chunk in r.iter_content(1024):
                             f.write(chunk)
                 except:
+                    import sys
+                    print sys.exc_info()
                     if os.path.exists(path):
                         os.unlink(path)
                     raise NotFound()
@@ -258,8 +263,12 @@ class ImageServer(object):
         else:
             requested_color = "black"
 
-        im_with_fields = Image.new("RGBA", (int(requested_width), int(requested_height)), requested_color)
-        im_with_fields.paste(im.resize((int(new_width), int(new_height)), Image.ANTIALIAS), (int((requested_width - new_width) / 2.0), int((requested_height - new_height) / 2.0)))
+        try:
+            im_with_fields = Image.new("RGBA", (int(requested_width), int(requested_height)), requested_color)
+        except ValueError:
+            raise BadRequest()
+        im_with_fields.paste(im.resize((int(new_width), int(new_height)), Image.ANTIALIAS),
+                             (int((requested_width - new_width) / 2.0), int((requested_height - new_height) / 2.0)))
 
         return im_with_fields
 
