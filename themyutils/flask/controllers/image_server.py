@@ -7,6 +7,10 @@ from mimetypes import guess_type
 import os
 from PIL import Image
 from PIL.ExifTags import TAGS
+try:
+    from redlock import RedLockFactory
+except ImportError:
+    pass
 import requests
 from werkzeug.exceptions import BadRequest, NotFound
 from werkzeug.routing import Rule, Submount
@@ -31,71 +35,78 @@ def image_handler(handler):
 
         if self.allow_internet:
             if not os.path.exists(path) and b"/" in filename:
-                [proto, etc] = filename.split(b"/", 1)
-                url = proto + b"://" + etc + b"?" + request.query_string
+                with self.lock(path):
+                    if not os.path.exists(path):
+                        path_incomplete = path + b".download"
+                        [proto, etc] = filename.split(b"/", 1)
+                        url = proto + b"://" + etc + b"?" + request.query_string
 
-                try:
-                    r = requests.get(url, headers={INTERNET_IMAGE_HEADER: "true"}, stream=True)
-                    try:
-                        os.makedirs(os.path.dirname(path))
-                    except OSError:
-                        pass
-                    with open(path, "w") as f:
-                        for chunk in r.iter_content(1024):
-                            f.write(chunk)
-                except:
-                    if os.path.exists(path):
-                        os.unlink(path)
-                    raise NotFound()
+                        try:
+                            r = requests.get(url, headers={INTERNET_IMAGE_HEADER: "true"}, stream=True)
+                            try:
+                                os.makedirs(os.path.dirname(path))
+                            except OSError:
+                                pass
+                            with open(path_incomplete, "w") as f:
+                                for chunk in r.iter_content(1024):
+                                    f.write(chunk)
+                        except:
+                            if os.path.exists(path_incomplete):
+                                os.unlink(path)
+                            raise NotFound()
+                        else:
+                            os.rename(path_incomplete, path)
 
         if not os.path.exists(path):
             raise NotFound()
 
         processed_path = os.path.join(self.path, request.path[len(self.url_path) + 1:].encode("utf-8") + filename_append)
         if not os.path.exists(processed_path):
-            im = Image.open(path)
-            if hasattr(im, "_getexif"):
-                try:
-                    exif = im._getexif()
-                except:
-                    exif = None
+            with self.lock(processed_path):
+                if not os.path.exists(processed_path):
+                    im = Image.open(path)
+                    if hasattr(im, "_getexif"):
+                        try:
+                            exif = im._getexif()
+                        except:
+                            exif = None
 
-                if exif:
-                    metadata = {TAGS.get(k): v for k, v in exif.iteritems()}
-                    if "Orientation" in metadata:
-                        orientation = metadata["Orientation"]
-                        if orientation == 1:
-                            # Nothing
-                            im = im.copy()
-                        elif orientation == 2:
-                            # Vertical Mirror
-                            im = im.transpose(Image.FLIP_LEFT_RIGHT)
-                        elif orientation == 3:
-                            # Rotation 180°
-                            im = im.transpose(Image.ROTATE_180)
-                        elif orientation == 4:
-                            # Horizontal Mirror
-                            im = im.transpose(Image.FLIP_TOP_BOTTOM)
-                        elif orientation == 5:
-                            # Horizontal Mirror + Rotation 90° CCW
-                            im = im.transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_90)
-                        elif orientation == 6:
-                            # Rotation 270°
-                            im = im.transpose(Image.ROTATE_270)
-                        elif orientation == 7:
-                            # Horizontal Mirror + Rotation 270°
-                            im = im.transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_270)
-                        elif orientation == 8:
-                            # Rotation 90°
-                            im = im.transpose(Image.ROTATE_90)
+                        if exif:
+                            metadata = {TAGS.get(k): v for k, v in exif.iteritems()}
+                            if "Orientation" in metadata:
+                                orientation = metadata["Orientation"]
+                                if orientation == 1:
+                                    # Nothing
+                                    im = im.copy()
+                                elif orientation == 2:
+                                    # Vertical Mirror
+                                    im = im.transpose(Image.FLIP_LEFT_RIGHT)
+                                elif orientation == 3:
+                                    # Rotation 180°
+                                    im = im.transpose(Image.ROTATE_180)
+                                elif orientation == 4:
+                                    # Horizontal Mirror
+                                    im = im.transpose(Image.FLIP_TOP_BOTTOM)
+                                elif orientation == 5:
+                                    # Horizontal Mirror + Rotation 90° CCW
+                                    im = im.transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_90)
+                                elif orientation == 6:
+                                    # Rotation 270°
+                                    im = im.transpose(Image.ROTATE_270)
+                                elif orientation == 7:
+                                    # Horizontal Mirror + Rotation 270°
+                                    im = im.transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_270)
+                                elif orientation == 8:
+                                    # Rotation 90°
+                                    im = im.transpose(Image.ROTATE_90)
 
-            im_processed = handler(self, im, **kwargs)
+                    im_processed = handler(self, im, **kwargs)
 
-            try:
-                os.makedirs(os.path.dirname(processed_path))
-            except OSError:
-                pass
-            im_processed.save(processed_path, format=im.format, quality=85)
+                    try:
+                        os.makedirs(os.path.dirname(processed_path))
+                    except OSError:
+                        pass
+                    im_processed.save(processed_path, format=im.format, quality=85)
 
         if not os.path.isfile(processed_path):
             raise NotFound()
@@ -107,9 +118,10 @@ def image_handler(handler):
 
 
 class ImageServer(object):
-    def __init__(self, app, path, url_path=None, allow_internet=False):
+    def __init__(self, app, path, url_path=None, allow_internet=False, redis_lock=None):
         self.app = app
         self.path = path.encode("utf-8")
+        self.lock_factory = RedLockFactory(redis_lock) if redis_lock else None
 
         if url_path is None:
             if self.path.startswith(app.static_folder):
@@ -303,3 +315,25 @@ class ImageServer(object):
     @image_handler
     def execute_pass_image(self, im, **kwargs):
         return im
+
+    def lock(self, resource):
+        return _ImageServerLock(self.lock_factory, resource)
+
+
+class _ImageServerLock(object):
+    def __init__(self, factory, resource):
+        self.factory = factory
+        self.resource = resource
+
+        self.lock = None
+
+    def __enter__(self):
+        if self.factory:
+            self.lock = self.factory.create_lock(self.resource, retry_times=50, retry_delay=200, ttl=10000)
+            return self.lock.acquire()
+        else:
+            return True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.lock:
+            self.lock.release()
