@@ -23,4 +23,6 @@ class Cron(object):
 
             self.jobs[celery_task.name] = func
 
+            return func
+
         return decorator
