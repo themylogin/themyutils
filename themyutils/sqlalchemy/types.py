@@ -5,13 +5,14 @@ from collections import OrderedDict
 import json
 from sqlalchemy.dialects.mysql import LONGBLOB
 import sqlalchemy.types
+import sys
 
 __all__ = [b"MySqlPickleType",
            b"create_pickler", b"JsonOrderedDictPickler"]
 
 
 class MySqlPickleType(sqlalchemy.types.PickleType):
-    impl = LONGBLOB
+    impl = LONGBLOB if not sys.argv[0].endswith("nosetests") else sqlalchemy.types.LargeBinary
 
 
 def create_pickler(dumps, loads):

@@ -36,8 +36,10 @@ def image_handler(handler):
 
                 try:
                     r = requests.get(url, headers={INTERNET_IMAGE_HEADER: "true"}, stream=True)
-                    if not os.path.isdir(os.path.dirname(path)):
+                    try:
                         os.makedirs(os.path.dirname(path))
+                    except OSError:
+                        pass
                     with open(path, "w") as f:
                         for chunk in r.iter_content(1024):
                             f.write(chunk)
@@ -89,8 +91,10 @@ def image_handler(handler):
 
             im_processed = handler(self, im, **kwargs)
 
-            if not os.path.isdir(os.path.dirname(processed_path)):
+            try:
                 os.makedirs(os.path.dirname(processed_path))
+            except OSError:
+                pass
             im_processed.save(processed_path, format=im.format, quality=85)
 
         if not os.path.isfile(processed_path):
