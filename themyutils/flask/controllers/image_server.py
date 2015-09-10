@@ -12,7 +12,7 @@ try:
 except ImportError:
     pass
 import requests
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadGateway, BadRequest, NotFound
 from werkzeug.routing import Rule, Submount
 from werkzeug.wrappers import BaseResponse
 from werkzeug.wsgi import wrap_file
@@ -50,12 +50,18 @@ def image_handler(handler):
                             with open(path_incomplete, "w") as f:
                                 for chunk in r.iter_content(1024):
                                     f.write(chunk)
-                        except:
+                        except Exception:
                             if os.path.exists(path_incomplete):
                                 os.unlink(path)
                             raise NotFound()
                         else:
-                            os.rename(path_incomplete, path)
+                            try:
+                                Image.open(path_incomplete)
+                            except IOError:
+                                os.unlink(path_incomplete)
+                                raise BadGateway()
+                            else:
+                                os.rename(path_incomplete, path)
 
         if not os.path.exists(path):
             raise NotFound()
@@ -68,7 +74,7 @@ def image_handler(handler):
                     if hasattr(im, "_getexif"):
                         try:
                             exif = im._getexif()
-                        except:
+                        except Exception:
                             exif = None
 
                         if exif:
