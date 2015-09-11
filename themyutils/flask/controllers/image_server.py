@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 from flask import request
 import hashlib
-from mimetypes import guess_type
+import imghdr
 import os
 from PIL import Image
 from PIL.ExifTags import TAGS
@@ -117,8 +117,9 @@ def image_handler(handler):
         if not os.path.isfile(processed_path):
             raise NotFound()
 
+        image_type = imghdr.what(processed_path)
         return BaseResponse(wrap_file(request.environ, open(processed_path, "r")),
-                            mimetype=guess_type(processed_path)[0])
+                            mimetype="image/%s" % image_type if image_type else "application/octet-stream")
 
     return request_handler
 
