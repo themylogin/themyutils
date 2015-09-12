@@ -56,7 +56,7 @@ def image_handler(handler):
                             raise NotFound()
                         else:
                             try:
-                                Image.open(path_incomplete)
+                                Image.open(path_incomplete).load()
                             except IOError:
                                 os.unlink(path_incomplete)
                                 raise BadGateway()
