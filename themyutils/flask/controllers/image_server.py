@@ -59,7 +59,7 @@ def image_handler(handler):
                         else:
                             try:
                                 Image.open(path_incomplete).load()
-                            except IOError:
+                            except Exception:
                                 try:
                                     os.unlink(path_incomplete)
                                 except IOError:
