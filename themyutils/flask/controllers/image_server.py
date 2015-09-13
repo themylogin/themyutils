@@ -51,14 +51,19 @@ def image_handler(handler):
                                 for chunk in r.iter_content(1024):
                                     f.write(chunk)
                         except Exception:
-                            if os.path.exists(path_incomplete):
-                                os.unlink(path)
+                            try:
+                                os.unlink(path_incomplete)
+                            except IOError:
+                                pass
                             raise NotFound()
                         else:
                             try:
                                 Image.open(path_incomplete).load()
                             except IOError:
-                                os.unlink(path_incomplete)
+                                try:
+                                    os.unlink(path_incomplete)
+                                except IOError:
+                                    pass
                                 raise BadGateway()
                             else:
                                 os.rename(path_incomplete, path)
