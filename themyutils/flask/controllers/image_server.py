@@ -53,7 +53,7 @@ def image_handler(handler):
                         except Exception:
                             try:
                                 os.unlink(path_incomplete)
-                            except IOError:
+                            except OSError:
                                 pass
                             raise NotFound()
                         else:
@@ -62,11 +62,14 @@ def image_handler(handler):
                             except Exception:
                                 try:
                                     os.unlink(path_incomplete)
-                                except IOError:
+                                except OSError:
                                     pass
                                 raise BadGateway()
                             else:
-                                os.rename(path_incomplete, path)
+                                try:
+                                    os.rename(path_incomplete, path)
+                                except OSError:
+                                    pass
 
         if not os.path.exists(path):
             raise NotFound()
