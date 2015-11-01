@@ -15,7 +15,7 @@ def make_celery(app, db=None):
 
         def __call__(self, *args, **kwargs):
             with app.app_context():
-                return super(ContextTask, self).__call__(self, *args, **kwargs)
+                return super(ContextTask, self).__call__(*args, **kwargs)
 
         def after_return(self, status, retval, task_id, args, kwargs, einfo):
             if db:
