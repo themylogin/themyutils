@@ -12,12 +12,6 @@ setup(
     description="Common python utils used in themylogin's software",
     long_description=open("README.md").read(),
     install_requires=[
-        "Flask",
-        "isodate",
-        "pytils",
-        "pytz",
-        "redis",
-        "simplejson>=2.2.0",
     ],
     setup_requires=[
         "nose>=1.0",

@@ -79,6 +79,10 @@ def image_handler(handler):
             with self.lock(processed_path):
                 if not os.path.exists(processed_path):
                     im = Image.open(path)
+                    try:
+                        im.load()
+                    except IOError:
+                        raise BadGateway()
                     if hasattr(im, "_getexif"):
                         try:
                             exif = im._getexif()
