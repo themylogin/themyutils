@@ -21,7 +21,7 @@ class Cron(object):
                 "schedule": schedule(*args) if args else crontab(**kwargs),
             }
 
-            self.jobs[celery_task.name] = func
+            self.jobs[celery_task.name] = celery_task
 
             return celery_task
 
