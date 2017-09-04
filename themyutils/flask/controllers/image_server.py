@@ -1,9 +1,8 @@
 # -*- coding=utf-8 -*-
-from __future__ import absolute_import, division, unicode_literals
-
 from flask import request
 import hashlib
 import imghdr
+import logging
 import os
 from PIL import Image
 from PIL.ExifTags import TAGS
@@ -17,7 +16,9 @@ from werkzeug.routing import Rule, Submount
 from werkzeug.wrappers import BaseResponse
 from werkzeug.wsgi import wrap_file
 
-__all__ = [b"ImageServer"]
+__all__ = ["ImageServer"]
+
+logger = logging.getLogger(__name__)
 
 INTERNET_IMAGE_HEADER = "X-themyutils-internet-image-request"
 
@@ -79,6 +80,7 @@ def image_handler(handler):
             with self.lock(processed_path):
                 if not os.path.exists(processed_path):
                     im = Image.open(path)
+                    format = im.format
                     try:
                         im.load()
                     except IOError:
@@ -90,7 +92,7 @@ def image_handler(handler):
                             exif = None
 
                         if exif:
-                            metadata = {TAGS.get(k): v for k, v in exif.iteritems()}
+                            metadata = {TAGS.get(k): v for k, v in exif.items()}
                             if "Orientation" in metadata:
                                 orientation = metadata["Orientation"]
                                 if orientation == 1:
@@ -124,13 +126,15 @@ def image_handler(handler):
                         os.makedirs(os.path.dirname(processed_path))
                     except OSError:
                         pass
-                    im_processed.save(processed_path, format=im.format, quality=85)
+                    im_processed.save(processed_path, format=format, quality=85)
 
         if not os.path.isfile(processed_path):
             raise NotFound()
 
-        image_type = imghdr.what(processed_path)
-        return BaseResponse(wrap_file(request.environ, open(processed_path, "r")),
+        with open(processed_path, "rb") as f:
+            image_type = imghdr.what(f)
+
+        return BaseResponse(wrap_file(request.environ, open(processed_path, "rb")),
                             mimetype="image/%s" % image_type if image_type else "application/octet-stream")
 
     return request_handler
