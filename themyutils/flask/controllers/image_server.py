@@ -304,7 +304,7 @@ class ImageServer(object):
             requested_color = "black"
 
         try:
-            im_with_fields = Image.new("RGBA", (int(requested_width), int(requested_height)), requested_color)
+            im_with_fields = Image.new(im.mode, (int(requested_width), int(requested_height)), requested_color)
         except ValueError:
             raise BadRequest()
         im_with_fields.paste(im.resize((int(new_width), int(new_height)), Image.ANTIALIAS),
